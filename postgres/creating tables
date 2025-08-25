@@ -1,0 +1,34 @@
+-- People dictionary
+CREATE TABLE reddit_people (
+  id BIGSERIAL PRIMARY KEY,
+  canonical_name TEXT NOT NULL UNIQUE,
+  display_name   TEXT,
+  kind           TEXT CHECK (kind IN ('founder','investor','other')) DEFAULT 'other',
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Reddit mentions (sightings)
+CREATE TABLE reddit_sightings (
+  id BIGSERIAL PRIMARY KEY,
+  person_id   BIGINT NOT NULL REFERENCES reddit_people(id) ON DELETE CASCADE,
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('submission','comment')),
+  entity_id   TEXT NOT NULL,
+  permalink   TEXT NOT NULL,
+  subreddit   TEXT,
+  author      TEXT,
+  title       TEXT,
+  excerpt     TEXT,
+  matched_text TEXT,
+  matched_by   TEXT,
+  score        INT,
+  created_utc  TIMESTAMPTZ,
+  ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (person_id, entity_id)
+);
+
+-- Collector state (for watermarks)
+CREATE TABLE collector_state (
+  key   TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
